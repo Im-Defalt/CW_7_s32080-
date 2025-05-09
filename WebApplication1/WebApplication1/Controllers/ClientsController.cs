@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using WebApplication1.Controllers.DTOs;
+using WebApplication1.Exceptions;
+using WebApplication1.Services;
 
 namespace WebApplication1.Controllers;
 
@@ -10,7 +12,7 @@ namespace WebApplication1.Controllers;
 public class ClientsController(IConfiguration configuration) : ControllerBase
 {
     [HttpGet("{id}/trips")]
-    public async Task<IActionResult> GetClientTrips(int id)
+    public async Task<IActionResult> GetClientTrips([FromRoute]int id)
     {
         if (id < 1)
         {
@@ -72,6 +74,37 @@ public class ClientsController(IConfiguration configuration) : ControllerBase
         
         return Ok(result);
     }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetClientById([FromRoute] int id)
+    {
+        DbService service = new DbService(configuration);
+        try
+        {
+            return Ok(await service.GetClientById(id));
+        }
+        catch (NotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+    }
+    
+    
+    
+    
+
+
+
+    [HttpPost]
+    public async Task<IActionResult> CreateClient([FromBody] ClientCreateDTO body)
+    {
+        DbService service = new DbService(configuration);
+        var client = await service.CreateClient(body);
+        return CreatedAtAction(nameof(GetClientById), new {id = client.IdClient}, client);
+    }
+    
+    
+    
     
     
     
