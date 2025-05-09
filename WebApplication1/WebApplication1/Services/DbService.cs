@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
+﻿using System.Runtime.InteropServices.JavaScript;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using WebApplication1.Controllers.DTOs;
@@ -77,4 +78,94 @@ public class DbService(IConfiguration configuration) : IDbService
             Pesel = client.Pesel
         };
     }
+
+
+
+
+    public async Task<int> CheckClientExists(int IdClient)
+    {
+        var sql = "select count(*) from Client where IdClient = @IdClient";
+
+        using (SqlConnection connection = new SqlConnection(configuration.GetConnectionString("Default")))
+        {
+            await connection.OpenAsync();
+
+            using (SqlCommand command = new SqlCommand(sql, connection))
+            {
+                command.Parameters.AddWithValue("@IdClient", IdClient);
+                return (int)await command.ExecuteScalarAsync();
+            }
+        }
+    }
+    
+    public async Task<int> CheckTripExists(int TripId)
+    {
+        var sql = @"select count(*) from Trip where IdTrip = @IdTrip";
+
+        using (SqlConnection connection = new SqlConnection(configuration.GetConnectionString("Default")))
+        {
+            await connection.OpenAsync();
+
+            using (SqlCommand command = new SqlCommand(sql,connection))
+            {
+                command.Parameters.AddWithValue("@IdTrip", TripId);
+                int result = (int)await command.ExecuteScalarAsync();
+                return result;
+                
+
+            }
+        }
+    }
+    
+    public async Task<int> CheckIfFull(int IdTrip)
+    {
+        var sql = @"SELECT 
+    CASE 
+        WHEN COUNT(ct.IdClient) >= t.MaxPeople THEN 1 
+        ELSE 0 
+    END AS IsFull
+FROM 
+    Trip t
+LEFT JOIN 
+    Client_Trip ct ON t.IdTrip = ct.IdTrip
+WHERE 
+    t.IdTrip = @IdTrip
+GROUP BY 
+    t.MaxPeople;";
+
+        using (SqlConnection connection = new SqlConnection(configuration.GetConnectionString("Default")))
+        {
+            await connection.OpenAsync();
+
+            using (SqlCommand command = new SqlCommand(sql,connection))
+            {
+                command.Parameters.AddWithValue("@IdTrip", IdTrip);
+                int result = (int)await command.ExecuteScalarAsync();
+                return result;
+                
+
+            }
+        }
+    }
+
+    public async Task UpdateTrip(int IdClient, int TripId)
+    {
+        var sql = @"INSERT INTO Client_Trip (IdClient, IdTrip , RegisteredAt) values (@IdClient, @IdTrip , @RegisteredAt)";
+        using (SqlConnection connection = new SqlConnection(configuration.GetConnectionString("Default")))
+        {
+            await connection.OpenAsync();
+
+            using (SqlCommand command = new SqlCommand(sql, connection))
+            {
+                command.Parameters.AddWithValue("@IdClient", IdClient);
+                command.Parameters.AddWithValue("@IdTrip", TripId);
+                command.Parameters.AddWithValue("@RegisteredAt", int.Parse(DateTime.Now.ToString("yyyyMMdd")));
+                await command.ExecuteNonQueryAsync();
+                
+            }
+        }
+    }
+    
+    
+    
 }

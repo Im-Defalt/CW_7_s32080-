@@ -91,10 +91,6 @@ public class ClientsController(IConfiguration configuration) : ControllerBase
     
     
     
-    
-
-
-
     [HttpPost]
     public async Task<IActionResult> CreateClient([FromBody] ClientCreateDTO body)
     {
@@ -102,13 +98,41 @@ public class ClientsController(IConfiguration configuration) : ControllerBase
         var client = await service.CreateClient(body);
         return CreatedAtAction(nameof(GetClientById), new {id = client.IdClient}, client);
     }
-    
-    
-    
-    
-    
-    
-    
+
+
+
+    [HttpPut("{id}/trips/{tripId}")]
+    public async Task<IActionResult> UpdateClientTrip([FromRoute] int id, [FromRoute] int tripId)
+    {
+        DbService service = new DbService(configuration);
+        
+        var osoba = await service.CheckClientExists(id);
+        if (osoba == 0)
+        {
+            return NotFound($"nie istnieje osoba o podanym id :{id}");
+        }
+        var trip = await service.CheckTripExists(tripId);
+        if (trip == 0)
+        {
+            return NotFound($"nie istnieje trip o podanym tripid :{tripId}");
+        }
+        
+        var isFull = await service.CheckIfFull(tripId);
+        if (isFull != 0)
+        {
+            return Conflict($"The client is full");
+        }
+        
+
+        await service.UpdateTrip(id, tripId);
+            
+            
+        return Created();
+    }
+
+
+
+
     private async Task<bool> CheckClientExists(int clientId, string connectionString)
     {
         string checkQuery = "SELECT COUNT(*) FROM Client WHERE IdClient = @ClientId";
@@ -122,4 +146,5 @@ public class ClientsController(IConfiguration configuration) : ControllerBase
             return count > 0;
         }
     }
+    
 }
