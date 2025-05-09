@@ -131,6 +131,46 @@ public class ClientsController(IConfiguration configuration) : ControllerBase
     }
 
 
+    [HttpDelete("{id}/trips/{tripId}")]
+    public async Task<IActionResult> DeleteClientTrip([FromRoute] int id, [FromRoute] int tripId)
+    {
+        DbService service = new DbService(configuration);
+
+        var check = await service.CheckIfRegistryExists(id, tripId);
+        if (check <= 0)
+        {
+            return NotFound($"This registration doesnt exist");
+        }
+        
+        var sql = @"delete from Client_Trip where IdClient = @IdClient and IdTrip = @IdTrip";
+        
+
+
+        using (SqlConnection connection = new SqlConnection(configuration.GetConnectionString("Default")))
+        {
+            
+            await connection.OpenAsync();
+            
+            
+            using (SqlCommand command = new SqlCommand(sql,connection))
+            {
+                command.Parameters.AddWithValue("@IdClient", id);
+                command.Parameters.AddWithValue("@IdTrip", tripId);
+
+                
+                await command.ExecuteNonQueryAsync();
+
+            }
+        }
+        return Ok(new { message = "Records were successfully deleted" });
+        
+    }
+    
+    
+    
+    
+
+
 
 
     private async Task<bool> CheckClientExists(int clientId, string connectionString)

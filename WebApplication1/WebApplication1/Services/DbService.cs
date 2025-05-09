@@ -165,6 +165,23 @@ GROUP BY
             }
         }
     }
+
+    public async Task<int> CheckIfRegistryExists(int IdClient, int IdTrip)
+    {
+        var sql = "select count(*) from Client_Trip where IdTrip = @IdTrip and IdClient = @IdClient";
+        using (SqlConnection connection = new SqlConnection(configuration.GetConnectionString("Default")))
+        {
+            await connection.OpenAsync();
+            
+            using (SqlCommand command = new SqlCommand(sql, connection))
+            {
+                command.Parameters.AddWithValue("@IdTrip", IdTrip);
+                command.Parameters.AddWithValue("@IdClient", IdClient);
+                int result = (int)await command.ExecuteScalarAsync();
+                return result;
+            }
+        }
+    }
     
     
     
