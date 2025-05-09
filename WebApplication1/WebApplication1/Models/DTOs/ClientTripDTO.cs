@@ -1,6 +1,6 @@
 ﻿namespace WebApplication1.Controllers.DTOs;
 
-public class TripGetDTO
+public class ClientTripDTO
 {
     public int IdTrip { get; set; }
     public string Name { get; set; }
@@ -9,5 +9,6 @@ public class TripGetDTO
     public DateTime DateTo { get; set; }
     public int MaxPeople { get; set; }
     public List<CountryGetDTO> Countries { get; set; }
-    
+    public int RegisteredAt { get; set; }
+    public int PaymentDate { get; set; }
 }
